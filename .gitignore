@@ -1,0 +1,13 @@
+# Folder Virtual Environment (Sangat besar, jangan di-upload)
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# File konfigurasi pribadi (jika ada)
+.env
+
+# Data log
+*.log
