@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
 import json
 import numpy as np
 import joblib 
@@ -17,12 +18,12 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # === KONFIGURASI PROYEK & KREDENSIAL ===
 # ====================================================================
 
-# --- MQTT HiveMQ Cloud ---
+# --- MQTT Broker ---
 # MQTT_BROKER_HOST = "74489fb16d844b74b1e9db42ef05d167.s1.eu.hivemq.cloud" 
 # MQTT_BROKER_PORT = 8883 # Port SSL/TLS
 # MQTT_USER = "firdian" 
 # MQTT_PASS = "F1rdianr" 
-MQTT_BROKER_HOST = "192.168.8.100" 
+MQTT_BROKER_HOST = "localhost" 
 MQTT_BROKER_PORT = 1883 # Port SSL/TLS
 MQTT_USER = "bangfir" 
 MQTT_PASS = "B4ngfir!" 
@@ -269,7 +270,7 @@ def daily_evening_trigger():
 # ====================================================================
 
 # Global client object
-client = mqtt.Client(transport="tcp")
+client = mqtt.Client(CallbackAPIVersion.VERSION1, transport="tcp")
 
 def on_status_message(client, userdata, msg):
     """Callback khusus untuk menyimpan status posisi kanopi (terbuka/tertutup)."""
@@ -293,7 +294,7 @@ def on_status_auto_message(client, userdata, msg):
 def on_connect(client, userdata, flags, rc):
     """Dipanggil ketika klien terhubung ke broker."""
     if rc == 0:
-        print(f"✅ Terhubung ke HiveMQ Broker ({MQTT_BROKER_HOST})")
+        print(f"✅ Terhubung ke Broker MQTT ({MQTT_BROKER_HOST})")
         
         # Subscribe ke topic data mentah
         client.subscribe(MQTT_TOPIC_SUBSCRIBE)
@@ -337,6 +338,8 @@ def on_message(client, userdata, msg):
 
 if __name__ == "__main__":
     client.username_pw_set(MQTT_USER, MQTT_PASS)
+    
+    # comment jika akan menggunakan broker lokal tanpa TLS
     # client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
     
     client.on_connect = on_connect
@@ -356,10 +359,12 @@ if __name__ == "__main__":
     try:
         client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, 60)
         
+        client.loop_start()
+        
+        print("Sistem Fog Node Berjalan...")
         while True:
-            client.loop() 
             schedule.run_pending() 
-            time.sleep(1) 
+            time.sleep(1) # Mengurangi beban CPU server
             
     except Exception as e:
         print(f"❌ Gagal koneksi atau error loop: {e}")
